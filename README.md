@@ -1,15 +1,57 @@
 ## Tutorial
 
+
+```dockerfile
+FROM ubuntu:18.04
+
+RUN \
+sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
+&& sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
+&& apt clean \
+&& apt-get update -y
+
+
+RUN mkdir /workspace
+WORKDIR /workspace
+
+COPY ./gcc-3.4.tar.gz .
+COPY ./hit-oslab-linux-20110823.tar.gz .
+
+RUN tar -zxf gcc-3.4.tar.gz
+RUN tar -zxf hit-oslab-linux-20110823.tar.gz
+
+RUN apt-get install -y binutils \
+&& cd ./gcc-3.4/amd64/ \
+&& dpkg -i *.deb
+RUN apt-cache search as86 ld86 \
+&& apt install bin86 \
+&& apt install -y libc6-dev-i386 \
+&& apt-get install make \
+&& cd /workspace/oslab/linux-0.11 \
+&& make all \
+&& dpkg --add-architecture i386 \
+&& apt-get update \
+&& apt-get install -y libsm6:i386 \
+&& apt-get install -y libx11-6:i386 \
+&& apt-get install libxpm4:i386
+```
+
+
 先在目录下 build image
 
 ```shell
 
- docker build --platform linux/amd64 --progress=plain -t hit-oslab:v2 .
+docker build --platform linux/amd64 --progress=plain -t hit-oslab:v2 .
+```
+也可以直接pull现有镜像
+
+```shell
+docker pull vitoclone/hit-oslab:v2
+```
 
 
+```shell
 docker run -itd --privileged -v /tmp/.X11-unix:/tmp/.X11-unix --name oslab2 hit-oslab:v2
-
-
 ```
 
 安装socat 和 xquartz
